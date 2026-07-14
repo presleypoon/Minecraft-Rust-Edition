@@ -12,4 +12,4 @@ I'll put any known bugs in the section below
 
 * Render is not working
 
-$/rightarrow$ It is not coded
+$\rightarrow$ It is not coded
