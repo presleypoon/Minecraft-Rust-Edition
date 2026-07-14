@@ -4,12 +4,14 @@ This is just for education purposes, and I'm not making any plans on making mone
 
 ## Bugs
 
-Report any bugs in any **released** version, not commits though, commmits are like a record, but releases are like "I think it is ready, but not sure"
+Report any bugs in any **released** version, not commits though, commmits are like a record, but releases are like "I think it is ready"
 
 I'll put any known bugs in the section below
 
 ## Known Bugs
 
 * Render is not working
-
 $\rightarrow$ It is not coded
+
+* Game logic don't work
+$\rightarrow$ it is not coded
