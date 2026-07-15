@@ -1,25 +1,37 @@
-#![allow(unused)]
-
-use macroquad::{experimental::scene::clear, prelude::*};
+use enigo::{Coordinate, Enigo, Mouse, Settings};
+use macroquad::prelude::*;
 use std::{
     collections::HashMap,
     time::{Duration, Instant},
 };
 
 const TPS: f32 = 20.0;
+static mut WINDOW_WIDTH: f32 = -1.0;
+static mut WINDOW_HEIGHT: f32 = -1.0;
+static mut CENTRE_X: f32 = -1.0;
+static mut CENTRE_Y: f32 = -1.0;
 
 fn window() -> Conf {
     Conf {
         window_title: "Minecraft: Rust Edition".to_string(),
-        window_width: 1280,
-        window_height: 720,
-        fullscreen: false,
+        fullscreen: true,
         window_resizable: false,
         ..Default::default()
     }
 }
 
-#[derive(Clone)]
+struct Player {
+    position: Vec3,
+}
+impl Player {
+    fn new() -> Self {
+        Player {
+            position: vec3(0.0, 72.0, 0.0),
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
 enum Block {
     Air,
     Grass,
@@ -31,13 +43,27 @@ struct Chunk {
 }
 
 struct World {
-    data: HashMap<(i32, i32), Chunk>,
+    data: HashMap<(i32, i32, i32), Chunk>,
 }
 impl World {
     fn new() -> Self {
         World {
             data: HashMap::new(),
         }
+    }
+
+    fn new_chunk(&mut self, x: i32, y: i32, z: i32) {
+        let mut data: [[[Block; 16]; 16]; 16] = [[[Block::Air; 16]; 16]; 16];
+
+        for z in &mut data {
+            z[0] = [Block::Grass; 16];
+
+            for y in &mut z[1..16] {
+                *y = [Block::Cobblestone; 16];
+            }
+        }
+
+        self.data.insert((x, y, z), Chunk { data });
     }
 }
 
@@ -47,8 +73,24 @@ async fn main() {
     let mut last_tick: Instant = Instant::now();
     let mut accumlator: Duration = Duration::ZERO;
     let mut running: bool = false;
+    let mut enigo: Enigo = Enigo::new(&Settings::default()).unwrap();
 
-    let world: World = World::new();
+    let player: Player = Player::new();
+    let mut world: World = World::new();
+    let mut look_angle: Vec2 = Vec2::ZERO;
+
+    world.new_chunk(0, 0, 0);
+    set_cursor_grab(true);
+    show_mouse(false);
+
+    unsafe {
+        let (window_width, window_height) = enigo.main_display().unwrap_or((1920, 1080));
+        WINDOW_WIDTH = window_width as f32;
+        WINDOW_HEIGHT = window_height as f32;
+
+        CENTRE_X = WINDOW_WIDTH / 2.0;
+        CENTRE_Y = WINDOW_HEIGHT / 2.0;
+    }
 
     loop {
         if is_key_pressed(KeyCode::Escape) {
@@ -72,42 +114,83 @@ async fn main() {
             accumlator = Duration::ZERO;
         }
 
-        render(&world);
+        camera_move(&mut look_angle, &mut enigo);
+        render(&player, &world, look_angle);
 
         next_frame().await;
     }
 }
 
-fn render(world: &World) {
+fn camera_move(look_angle: &mut Vec2, enigo: &mut Enigo) {
+    let mouse_loc: (i32, i32) = enigo.location().unwrap();
+    let mouse_pos: Vec2 = vec2(mouse_loc.0 as f32, mouse_loc.1 as f32);
+    let mut mouse_rel_pos: Vec2 = mouse_pos - vec2(unsafe { CENTRE_X }, unsafe { CENTRE_Y });
+    mouse_rel_pos.y *= -1.0;
+    mouse_rel_pos *= vec2(0.25, 0.25);
+    *look_angle += mouse_rel_pos;
+    look_angle.x = (look_angle.x + 180.0) % 360.0 - 180.0;
+    look_angle.y = look_angle.y.clamp(-90.0, 90.0);
+
+    enigo
+        .move_mouse(
+            unsafe { CENTRE_X } as i32,
+            unsafe { CENTRE_Y } as i32,
+            Coordinate::Abs,
+        )
+        .ok();
+    println!("{:?}", look_angle);
+}
+
+fn render(player: &Player, world: &World, look_angle: Vec2) {
     clear_background(Color::from_hex(0x7FCCFFFF));
 
+    let position: Vec3 = player.position;
+
+    let yaw_rad: f32 = look_angle.x.to_radians();
+    let pitch_rad: f32 = look_angle.y.to_radians();
+    let front: Vec3 = vec3(
+        yaw_rad.cos() * pitch_rad.cos(),
+        pitch_rad.sin(),
+        yaw_rad.sin() * pitch_rad.cos(),
+    );
+    let target: Vec3 = position + front;
+
     set_camera(&Camera3D {
-        position: vec3(8.0, 10.0, 25.0),
-        target: vec3(8.0, 0.0, 8.0),
+        position,
+        target,
         up: vec3(0.0, 1.0, 0.0),
         ..Default::default()
     });
 
-    for ((cx, cz), chunk) in &world.data {
+    for ((cx, cy, cz), chunk) in &world.data {
         for x in 0..16 {
             for y in 0..16 {
                 for z in 0..16 {
-                    let draw_pos = vec3(*cx as f32 * 16.0, 0.0, *cz as f32 * 16.0)
-                        + vec3(x as f32, y as f32, z as f32);
-
-                    match chunk.data[z][y][x] {
-                        Block::Grass => {
-                            draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GREEN);
-                            draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
-                        }
-                        Block::Cobblestone => {
-                            draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GRAY);
-                            draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
-                        }
-                        _ => {}
+                    if chunk.data[z][y][x] == Block::Air {
+                        continue;
                     }
+
+                    let draw_pos: Vec3 =
+                        vec3(*cx as f32 * 16.0, *cy as f32 * 16.0, *cz as f32 * 16.0)
+                            + vec3(x as f32, 15.0 - y as f32, z as f32);
+
+                    render_block(chunk.data[z][y][x], draw_pos);
                 }
             }
         }
+    }
+}
+
+fn render_block(block: Block, draw_pos: Vec3) {
+    match block {
+        Block::Grass => {
+            draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GREEN);
+            draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
+        }
+        Block::Cobblestone => {
+            draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GRAY);
+            draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
+        }
+        _ => unreachable!("Invalid Block: {:?}", block),
     }
 }
