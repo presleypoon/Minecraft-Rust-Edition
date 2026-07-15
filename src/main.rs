@@ -1,3 +1,9 @@
+mod player;
+mod world;
+
+use player::*;
+use world::*;
+
 use enigo::{Coordinate, Enigo, Mouse, Settings};
 use macroquad::prelude::*;
 use std::{
@@ -26,53 +32,6 @@ fn window() -> Conf {
         fullscreen: true,
         window_resizable: false,
         ..Default::default()
-    }
-}
-
-struct Player {
-    position: Vec3,
-}
-impl Player {
-    fn new() -> Self {
-        Player {
-            position: vec3(0.0, 72.0, 0.0),
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-enum Block {
-    Air,
-    Grass,
-    Cobblestone,
-}
-
-struct Chunk {
-    data: [[[Block; 16]; 16]; 16],
-}
-
-struct World {
-    data: HashMap<(i32, i32, i32), Chunk>,
-}
-impl World {
-    fn new() -> Self {
-        World {
-            data: HashMap::new(),
-        }
-    }
-
-    fn new_chunk(&mut self, x: i32, y: i32, z: i32) {
-        let mut data: [[[Block; 16]; 16]; 16] = [[[Block::Air; 16]; 16]; 16];
-
-        for z in &mut data {
-            z[0] = [Block::Grass; 16];
-
-            for y in &mut z[1..16] {
-                *y = [Block::Cobblestone; 16];
-            }
-        }
-
-        self.data.insert((x, y, z), Chunk { data });
     }
 }
 
