@@ -176,7 +176,7 @@ fn render(player: &Player, world: &World, look_angle: Vec2) {
             let y: usize = (i / 16) % 16;
             let z: usize = i / 256;
 
-            if chunk.data[z][y][x] == Block::Air {
+            if chunk.data[z][y][x] == Block::Air || !neighbour_air(chunk, (x, y, z)) {
                 continue;
             }
 
@@ -186,6 +186,32 @@ fn render(player: &Player, world: &World, look_angle: Vec2) {
             render_one_block(chunk.data[z][y][x], draw_pos);
         }
     }
+}
+
+fn neighbour_air(chunk: &Chunk, pos: (usize, usize, usize)) -> bool {
+    pos.0 == 0
+        || pos.0 == 15
+        || pos.1 == 0
+        || pos.1 == 15
+        || pos.2 == 0
+        || pos.2 == 15
+        || is_air(chunk, add_tuples(pos, (0, 0, 1)))
+        || is_air(chunk, sub_tuples(pos, (0, 0, 1)))
+        || is_air(chunk, add_tuples(pos, (0, 1, 0)))
+        || is_air(chunk, sub_tuples(pos, (0, 1, 0)))
+        || is_air(chunk, add_tuples(pos, (1, 0, 0)))
+        || is_air(chunk, sub_tuples(pos, (1, 0, 0)))
+}
+
+fn add_tuples(op1: (usize, usize, usize), op2: (usize, usize, usize)) -> (usize, usize, usize) {
+    (op1.0 + op2.0, op1.1 + op2.1, op1.2 + op2.2)
+}
+fn sub_tuples(op1: (usize, usize, usize), op2: (usize, usize, usize)) -> (usize, usize, usize) {
+    (op1.0 - op2.0, op1.1 - op2.1, op1.2 - op2.2)
+}
+
+fn is_air(chunk: &Chunk, pos: (usize, usize, usize)) -> bool {
+    chunk.data[pos.2][pos.1][pos.0] == Block::Air
 }
 
 fn render_one_block(block: Block, draw_pos: Vec3) {
