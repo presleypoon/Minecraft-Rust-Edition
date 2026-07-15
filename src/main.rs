@@ -11,14 +11,14 @@ static mut WINDOW_HEIGHT: f32 = -1.0;
 static mut CENTRE_X: f32 = -1.0;
 static mut CENTRE_Y: f32 = -1.0;
 
-macro_rules! elapsed {
-    ($name:expr, $block:block) => {
-        let start = std::time::Instant::now();
-        $block;
-        let duration = start.elapsed();
-        println!("{} took {:?}", $name, duration);
-    };
-}
+// macro_rules! elapsed {
+//     ($name:expr, $block:block) => {
+//         let start = std::time::Instant::now();
+//         $block;
+//         let duration = start.elapsed();
+//         println!("{} took {:?}", $name, duration);
+//     };
+// }
 
 fn window() -> Conf {
     Conf {
@@ -102,37 +102,29 @@ async fn main() {
     }
 
     loop {
-        elapsed!("init", {
-            if is_key_pressed(KeyCode::Escape) {
-                break;
+        if is_key_pressed(KeyCode::Escape) {
+            break;
+        }
+
+        let elapsed: Duration = last_tick.elapsed();
+        last_tick = Instant::now();
+        accumlator += elapsed;
+
+        if is_any_key_down() {
+            running = true;
+        }
+
+        if running {
+            while accumlator >= tick_rate {
+                /* game logic */
+                accumlator -= tick_rate;
             }
+        } else {
+            accumlator = Duration::ZERO;
+        }
 
-            let elapsed: Duration = last_tick.elapsed();
-            last_tick = Instant::now();
-            accumlator += elapsed;
-
-            if is_any_key_down() {
-                running = true;
-            }
-        });
-
-        elapsed!("game loop", {
-            if running {
-                while accumlator >= tick_rate {
-                    /* game logic */
-                    accumlator -= tick_rate;
-                }
-            } else {
-                accumlator = Duration::ZERO;
-            }
-        });
-
-        elapsed!("move cam", {
-            camera_move(&mut look_angle, &mut enigo);
-        });
-        elapsed!("render", {
-            render(&player, &world, look_angle);
-        });
+        camera_move(&mut look_angle, &mut enigo);
+        render(&player, &world, look_angle);
 
         next_frame().await;
     }
