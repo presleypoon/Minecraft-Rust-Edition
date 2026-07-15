@@ -11,6 +11,15 @@ static mut WINDOW_HEIGHT: f32 = -1.0;
 static mut CENTRE_X: f32 = -1.0;
 static mut CENTRE_Y: f32 = -1.0;
 
+macro_rules! elapsed {
+    ($name:expr, $block:block) => {
+        let start = std::time::Instant::now();
+        $block;
+        let duration = start.elapsed();
+        println!("{} took {:?}", $name, duration);
+    };
+}
+
 fn window() -> Conf {
     Conf {
         window_title: "Minecraft: Rust Edition".to_string(),
@@ -93,29 +102,37 @@ async fn main() {
     }
 
     loop {
-        if is_key_pressed(KeyCode::Escape) {
-            break;
-        }
-
-        let elapsed: Duration = last_tick.elapsed();
-        last_tick = Instant::now();
-        accumlator += elapsed;
-
-        if is_any_key_down() {
-            running = true;
-        }
-
-        if running {
-            while accumlator >= tick_rate {
-                /* game logic */
-                accumlator -= tick_rate;
+        elapsed!("init", {
+            if is_key_pressed(KeyCode::Escape) {
+                break;
             }
-        } else {
-            accumlator = Duration::ZERO;
-        }
 
-        camera_move(&mut look_angle, &mut enigo);
-        render(&player, &world, look_angle);
+            let elapsed: Duration = last_tick.elapsed();
+            last_tick = Instant::now();
+            accumlator += elapsed;
+
+            if is_any_key_down() {
+                running = true;
+            }
+        });
+
+        elapsed!("game loop", {
+            if running {
+                while accumlator >= tick_rate {
+                    /* game logic */
+                    accumlator -= tick_rate;
+                }
+            } else {
+                accumlator = Duration::ZERO;
+            }
+        });
+
+        elapsed!("move cam", {
+            camera_move(&mut look_angle, &mut enigo);
+        });
+        elapsed!("render", {
+            render(&player, &world, look_angle);
+        });
 
         next_frame().await;
     }
@@ -138,7 +155,6 @@ fn camera_move(look_angle: &mut Vec2, enigo: &mut Enigo) {
             Coordinate::Abs,
         )
         .ok();
-    println!("{:?}", look_angle);
 }
 
 fn render(player: &Player, world: &World, look_angle: Vec2) {
@@ -163,25 +179,24 @@ fn render(player: &Player, world: &World, look_angle: Vec2) {
     });
 
     for ((cx, cy, cz), chunk) in &world.data {
-        for x in 0..16 {
-            for y in 0..16 {
-                for z in 0..16 {
-                    if chunk.data[z][y][x] == Block::Air {
-                        continue;
-                    }
+        for i in 0..4095 {
+            let x: usize = i % 16;
+            let y: usize = (i / 16) % 16;
+            let z: usize = i / 256;
 
-                    let draw_pos: Vec3 =
-                        vec3(*cx as f32 * 16.0, *cy as f32 * 16.0, *cz as f32 * 16.0)
-                            + vec3(x as f32, 15.0 - y as f32, z as f32);
-
-                    render_block(chunk.data[z][y][x], draw_pos);
-                }
+            if chunk.data[z][y][x] == Block::Air {
+                continue;
             }
+
+            let draw_pos: Vec3 = vec3(*cx as f32 * 16.0, *cy as f32 * 16.0, *cz as f32 * 16.0)
+                + vec3(x as f32, 15.0 - y as f32, z as f32);
+
+            render_one_block(chunk.data[z][y][x], draw_pos);
         }
     }
 }
 
-fn render_block(block: Block, draw_pos: Vec3) {
+fn render_one_block(block: Block, draw_pos: Vec3) {
     match block {
         Block::Grass => {
             draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GREEN);
@@ -189,7 +204,7 @@ fn render_block(block: Block, draw_pos: Vec3) {
         }
         Block::Cobblestone => {
             draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GRAY);
-            draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
+            // draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
         }
         _ => unreachable!("Invalid Block: {:?}", block),
     }
