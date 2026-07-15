@@ -10,8 +10,8 @@ I'll put any known bugs in the section below
 
 ## Known Bugs
 
-* Render is not working
-$\rightarrow$ It is not coded
+* Can't Move
+$\rightarrow$ it is not coded
 
 * Game logic don't work
 $\rightarrow$ it is not coded
