@@ -1,6 +1,6 @@
 # Todo List
 
-Copied from Minecraft Wiki: Cave Game Tech Test: [text](https://minecraft.wiki/w/Cave_game_tech_test)
+Copied from [Minecraft Wiki: Cave Game Tech Test](https://minecraft.wiki/w/Cave_game_tech_test)
 
 ## Non-mob entities
 
