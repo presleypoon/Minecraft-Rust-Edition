@@ -42,7 +42,7 @@ async fn main() {
     let mut running: bool = false;
     let mut enigo: Enigo = Enigo::new(&Settings::default()).unwrap();
 
-    let player: Player = Player::new();
+    let mut player: Player = Player::new();
     let mut world: World = World::new();
     let mut look_angle: Vec2 = Vec2::ZERO;
 
@@ -74,7 +74,7 @@ async fn main() {
 
         if running {
             while accumlator >= tick_rate {
-                /* game logic */
+                game_tick(&mut player, look_angle);
                 accumlator -= tick_rate;
             }
         } else {
@@ -86,6 +86,10 @@ async fn main() {
 
         next_frame().await;
     }
+}
+
+fn game_tick(player: &mut Player, look_angle: Vec2) {
+    player.change_speed(look_angle);
 }
 
 fn camera_move(look_angle: &mut Vec2, enigo: &mut Enigo) {
