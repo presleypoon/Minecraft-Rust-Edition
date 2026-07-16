@@ -11,7 +11,9 @@ I'll put any known bugs in the section below
 ## Known Bugs
 
 * Can't Move
-$\rightarrow$ it is not coded
-
 * Game logic don't work
-$\rightarrow$ it is not coded
+
+## Inconsistancy
+
+* Block "Rock" $\rightarrow$ "Cobblestone"
+* Player will fall indefinitely $\rightarrow$ it will be until they hit the i32 limit

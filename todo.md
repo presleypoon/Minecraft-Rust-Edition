@@ -2,24 +2,6 @@
 
 Copied from Minecraft Wiki: Cave Game Tech Test: [text](https://minecraft.wiki/w/Cave_game_tech_test)
 
-## Blocks
-
-### Air
-
-Not listed as a block at this time.
-
-### Grass
-
-Made with the same graphics from Notch's game RubyDung.
-Grass appears on fully lit tiles on the top 7 layers of the map.
-Had the same texture on all sides of the block.
-
-### Rock
-
-Made with the same graphics from Notch's game RubyDung.
-Its texture at this time would later be repurposed for cobblestone.
-Rock would later be renamed to stone.
-
 ## Non-mob entities
 
 ### Player
@@ -36,13 +18,7 @@ Pass from the uppermost layer of the grass block to the penultimate layer of sto
 
 ### Chunks
 
-Takes about 0.1 seconds to generate.
-The size of each chunk is 16×16 blocks.
-Chunks are 16×16 blocks instead of 8×8 because 8×8 chunks decreased performance.
-Chunks are loaded in order of their proximity to the player.
 The player spawns in a 256×64×256 tile map.
-The game takes 20 seconds to generate a 256×64×256 map.
-It was possible to fall out of the world, but it would not kill the player.
 
 ## Gameplay
 
@@ -50,10 +26,8 @@ It was possible to fall out of the world, but it would not kill the player.
 
 WASD key use for movement.
 Space key for jumping.
-Moving the mouse moves the camera.
-Can’t break or place blocks.
 Holding down R causes the player to respawn in a random X and Z coordinate at Y=74 every game tick (which is 1/60th of a second long prior to rd-20090515) until the key is released.
-If the player falls into the void, they fall indefinitely until they press R.
+If the player falls into the void, they fall indefinitely *(in this, it will be until they hit the i32 limit)* until they press R.
 
 ## General
 
@@ -63,7 +37,3 @@ The lighting engine in Classic and pre-Classic was simple, with only 2 light lev
 "Sunlight" is emitted by the top edge of the map and hits any block that is under it, regardless of distance. It passes through transparent blocks to light blocks underneath.
 Blocks that do not receive light are in a dim shadow that remains at the same level of brightness no matter how far they are from a light source.
 Blocks which are darkened also have a layer of thick, black fog applied to them, appearing darker when looked at from further distances. This caused weird visual quirks.
-
-### Sky
-
-The color of the sky is #7FCCFF.
