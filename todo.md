@@ -9,8 +9,6 @@ Copied from [Minecraft Wiki: Cave Game Tech Test](https://minecraft.wiki/w/Cave_
 Currently has no model.
 
 Has a height of 1.7 blocks.
-
-Cannot perform any actions other than moving.
   
 ## World generation
 
@@ -26,13 +24,13 @@ The player spawns in a 256×64×256 tile map.
 
 ### Controls
 
-WASD key use for movement.
+In this: Going to add collution detection
 
 Space key for jumping.
 
 Holding down R causes the player to respawn in a random X and Z coordinate at Y=74 every game tick
 
-If the player falls into the void, they fall indefinitely *(in this, it will be until they hit the i32 limit)* until they press R.
+If the player falls into the void, they fall indefinitely (in this, it will be until they hit the i32 limit) until they press R.
 
 ## General
 
