@@ -1,4 +1,6 @@
-# Minecraft: Rust Edition
+# CraftRust
+
+## **I am not working in Mojang nor assosiated with Microsoft and Mojang**
 
 This is just for education purposes, and I'm not making any plans on making money off this.
 

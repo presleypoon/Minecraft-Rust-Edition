@@ -3,6 +3,14 @@
 version = 4
 
 [[package]]
+name = "CraftRust"
+version = "0.1.0"
+dependencies = [
+ "enigo",
+ "macroquad",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -314,14 +322,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "minecraft_rust_edition"
-version = "0.1.0"
-dependencies = [
- "enigo",
- "macroquad",
 ]
 
 [[package]]
