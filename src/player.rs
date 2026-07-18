@@ -21,7 +21,6 @@ impl Player {
 		let accel: Vec3 = Player::find_accel(look_angle);
 		self.change_pos();
 		self.change_vel(accel);
-		println!("{}, {}", self.pos, self.vel);
 	}
 
 	fn find_accel(look_angle: Vec2) -> Vec3 {

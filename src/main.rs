@@ -46,14 +46,17 @@ async fn main() {
 	let mut world: World = World::new();
 	let mut look_angle: Vec2 = Vec2::ZERO;
 
-	for z in -8..8 {
-		for y in 0..4 {
-			for x in -8..8 {
+	// for z in -8..8 {
+	// 	for y in 0..4 {
+	// 		for x in -8..8 {
+	for z in -2..2 {
+		for y in 0..3 {
+			for x in -2..2 {
 				world.new_chunk(
 					x,
 					y,
 					z,
-					if y == 3 {
+					if y == 2 {
 						ChunkType::OnGround
 					} else {
 						ChunkType::BelowGround

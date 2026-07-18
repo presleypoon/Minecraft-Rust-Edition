@@ -24,8 +24,6 @@ The player spawns in a 256×64×256 tile map.
 
 ### Controls
 
-In this: Going to add collution detection
-
 Space key for jumping.
 
 Holding down R causes the player to respawn in a random X and Z coordinate at Y=74 every game tick

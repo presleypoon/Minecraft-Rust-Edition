@@ -6,7 +6,6 @@ pub fn render(player: &Player, world: &World, look_angle: Vec2) {
 	clear_background(Color::from_hex(0x7FCCFFFF));
 
 	let position: Vec3 = player.pos;
-
 	let yaw_rad: f32 = look_angle.x.to_radians();
 	let pitch_rad: f32 = look_angle.y.to_radians();
 	let front: Vec3 = vec3(
@@ -23,60 +22,186 @@ pub fn render(player: &Player, world: &World, look_angle: Vec2) {
 		..Default::default()
 	});
 
-	for ((cx, cy, cz), chunk) in &world.data {
-		for i in 0..=4095 {
-			let x: usize = i % 16;
-			let y: usize = (i / 16) % 16;
-			let z: usize = i / 256;
+	for chunk in world.data.values() {
+		for mesh in &chunk.meshes {
+			draw_mesh(mesh);
+			gl_use_default_material();
+			unsafe { get_internal_gl().flush() };
+		}
+	}
+}
 
-			if chunk.data[z][y][x] == Block::Air || !neighbour_air(chunk, (x, y, z)) {
-				continue;
+fn create_vertex(pos: Vec3, colour: Color) -> Vertex {
+	Vertex {
+		position: pos,
+		uv: Vec2::ZERO,
+		normal: Vec4::ZERO,
+		color: colour.into(),
+	}
+}
+
+pub fn build_chunk(data: &[[[Block; 16]; 16]; 16], x: i32, y: i32, z: i32) -> Vec<Mesh> {
+	let mut meshes: Vec<Mesh> = Vec::new();
+
+	let mut vertices: Vec<Vertex> = Vec::new();
+	let mut indices: Vec<u16> = Vec::new();
+	let mut vertex_counter: u16 = 0;
+
+	let chunk_offset = vec3(x as f32 * 16.0, y as f32 * 16.0, z as f32 * 16.0);
+
+	for z in 0..16 {
+		for y in 0..16 {
+			for x in 0..16 {
+				let block = data[z][y][x];
+				if block == Block::Air {
+					continue;
+				}
+
+				if vertex_counter > 9900 || indices.len() > 4900 {
+					meshes.push(Mesh {
+						vertices: std::mem::take(&mut vertices),
+						indices: std::mem::take(&mut indices),
+						texture: None,
+					});
+					vertex_counter = 0;
+				}
+
+				let colour: Color = match block {
+					Block::Grass => GREEN,
+					Block::Cobblestone => GRAY,
+					_ => PINK,
+				};
+
+				let block_coord: Vec3 = vec3(x as f32, 15.0 - y as f32, z as f32);
+
+				let p: [Vec3; 8] = [
+					chunk_offset + vec3(block_coord.x, block_coord.y, block_coord.z),
+					chunk_offset + vec3(block_coord.x + 1.0, block_coord.y, block_coord.z),
+					chunk_offset + vec3(block_coord.x + 1.0, block_coord.y + 1.0, block_coord.z),
+					chunk_offset + vec3(block_coord.x, block_coord.y + 1.0, block_coord.z),
+					chunk_offset + vec3(block_coord.x, block_coord.y, block_coord.z + 1.0),
+					chunk_offset + vec3(block_coord.x + 1.0, block_coord.y, block_coord.z + 1.0),
+					chunk_offset
+						+ vec3(
+							block_coord.x + 1.0,
+							block_coord.y + 1.0,
+							block_coord.z + 1.0,
+						),
+					chunk_offset + vec3(block_coord.x, block_coord.y + 1.0, block_coord.z + 1.0),
+				];
+
+				if y == 0 || data[z][y - 1][x] == Block::Air {
+					vertices.push(create_vertex(p[3], colour));
+					vertices.push(create_vertex(p[2], colour));
+					vertices.push(create_vertex(p[6], colour));
+					vertices.push(create_vertex(p[7], colour));
+
+					indices.extend_from_slice(&[
+						vertex_counter,
+						vertex_counter + 1,
+						vertex_counter + 2,
+						vertex_counter,
+						vertex_counter + 2,
+						vertex_counter + 3,
+					]);
+					vertex_counter += 4;
+				}
+
+				if y == 15 || data[z][y + 1][x] == Block::Air {
+					vertices.push(create_vertex(p[0], colour));
+					vertices.push(create_vertex(p[1], colour));
+					vertices.push(create_vertex(p[5], colour));
+					vertices.push(create_vertex(p[4], colour));
+
+					indices.extend_from_slice(&[
+						vertex_counter,
+						vertex_counter + 2,
+						vertex_counter + 1,
+						vertex_counter,
+						vertex_counter + 3,
+						vertex_counter + 2,
+					]);
+					vertex_counter += 4;
+				}
+
+				if z == 0 || data[z - 1][y][x] == Block::Air {
+					vertices.push(create_vertex(p[0], colour));
+					vertices.push(create_vertex(p[1], colour));
+					vertices.push(create_vertex(p[2], colour));
+					vertices.push(create_vertex(p[3], colour));
+
+					indices.extend_from_slice(&[
+						vertex_counter,
+						vertex_counter + 2,
+						vertex_counter + 1,
+						vertex_counter,
+						vertex_counter + 3,
+						vertex_counter + 2,
+					]);
+					vertex_counter += 4;
+				}
+
+				if z == 15 || data[z + 1][y][x] == Block::Air {
+					vertices.push(create_vertex(p[4], colour));
+					vertices.push(create_vertex(p[5], colour));
+					vertices.push(create_vertex(p[6], colour));
+					vertices.push(create_vertex(p[7], colour));
+
+					indices.extend_from_slice(&[
+						vertex_counter,
+						vertex_counter + 1,
+						vertex_counter + 2,
+						vertex_counter,
+						vertex_counter + 2,
+						vertex_counter + 3,
+					]);
+					vertex_counter += 4;
+				}
+
+				if x == 0 || data[z][y][x - 1] == Block::Air {
+					vertices.push(create_vertex(p[0], colour));
+					vertices.push(create_vertex(p[3], colour));
+					vertices.push(create_vertex(p[7], colour));
+					vertices.push(create_vertex(p[4], colour));
+
+					indices.extend_from_slice(&[
+						vertex_counter,
+						vertex_counter + 1,
+						vertex_counter + 2,
+						vertex_counter,
+						vertex_counter + 2,
+						vertex_counter + 3,
+					]);
+					vertex_counter += 4;
+				}
+
+				if x == 15 || data[z][y][x + 1] == Block::Air {
+					vertices.push(create_vertex(p[1], colour));
+					vertices.push(create_vertex(p[2], colour));
+					vertices.push(create_vertex(p[6], colour));
+					vertices.push(create_vertex(p[5], colour));
+
+					indices.extend_from_slice(&[
+						vertex_counter,
+						vertex_counter + 2,
+						vertex_counter + 1,
+						vertex_counter,
+						vertex_counter + 3,
+						vertex_counter + 2,
+					]);
+					vertex_counter += 4;
+				}
 			}
-
-			let draw_pos: Vec3 = vec3(*cx as f32 * 16.0, *cy as f32 * 16.0, *cz as f32 * 16.0)
-				+ vec3(x as f32, 15.0 - y as f32, z as f32);
-
-			render_one_block(chunk.data[z][y][x], draw_pos);
 		}
 	}
-}
 
-fn neighbour_air(chunk: &Chunk, pos: (usize, usize, usize)) -> bool {
-	pos.0 == 0
-		|| pos.0 == 15
-		|| pos.1 == 0
-		|| pos.1 == 15
-		|| pos.2 == 0
-		|| pos.2 == 15
-		|| is_air(chunk, add_tuples(pos, (0, 0, 1)))
-		|| is_air(chunk, sub_tuples(pos, (0, 0, 1)))
-		|| is_air(chunk, add_tuples(pos, (0, 1, 0)))
-		|| is_air(chunk, sub_tuples(pos, (0, 1, 0)))
-		|| is_air(chunk, add_tuples(pos, (1, 0, 0)))
-		|| is_air(chunk, sub_tuples(pos, (1, 0, 0)))
-}
-
-fn add_tuples(op1: (usize, usize, usize), op2: (usize, usize, usize)) -> (usize, usize, usize) {
-	(op1.0 + op2.0, op1.1 + op2.1, op1.2 + op2.2)
-}
-fn sub_tuples(op1: (usize, usize, usize), op2: (usize, usize, usize)) -> (usize, usize, usize) {
-	(op1.0 - op2.0, op1.1 - op2.1, op1.2 - op2.2)
-}
-
-fn is_air(chunk: &Chunk, pos: (usize, usize, usize)) -> bool {
-	chunk.data[pos.2][pos.1][pos.0] == Block::Air
-}
-
-fn render_one_block(block: Block, draw_pos: Vec3) {
-	match block {
-		Block::Grass => {
-			draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GREEN);
-			draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
-		}
-		Block::Cobblestone => {
-			draw_cube(draw_pos, vec3(1.0, 1.0, 1.0), None, GRAY);
-			// draw_cube_wires(draw_pos, vec3(1.0, 1.0, 1.0), BLACK);
-		}
-		_ => unreachable!("Invalid Block: {:?}", block),
+	if !vertices.is_empty() {
+		meshes.push(Mesh {
+			vertices,
+			indices,
+			texture: None,
+		});
 	}
+
+	meshes
 }
