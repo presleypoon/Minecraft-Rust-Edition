@@ -40,11 +40,14 @@ async fn main() {
 	let mut player: Player = Player::new();
 	let mut world: World = World::new();
 	let mut look_angle: Vec2 = Vec2::ZERO;
+	let textures: Texture = Texture::new().await;
+
 	for (z, y, x) in (-8..8).flat_map(|z| (0..4).flat_map(move |y| (-8..8).map(move |x| (z, y, x)))) {
 		world.new_chunk(
 			x,
 			y,
 			z,
+			&textures,
 			if y == 3 {
 				ChunkType::OnGround
 			} else {
@@ -86,7 +89,7 @@ async fn main() {
 		}
 
 		camera_move(centre_x, centre_y, &mut look_angle, &mut enigo);
-		render(&player, &world, look_angle);
+		render(&player, &mut world, look_angle);
 
 		next_frame().await;
 	}
