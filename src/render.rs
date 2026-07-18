@@ -187,7 +187,7 @@ fn build_down(
 	colour: Color,
 	vertex_counter: &mut u16,
 ) {
-	if coord.1 != 15 || data[coord.2][coord.1 + 1][coord.0] != Block::Air {
+	if coord.1 != 15 && data[coord.2][coord.1 + 1][coord.0] != Block::Air {
 		return;
 	}
 	vertices.push(create_vertex(p[0], colour));
@@ -215,7 +215,7 @@ fn build_left(
 	colour: Color,
 	vertex_counter: &mut u16,
 ) {
-	if coord.2 != 0 || data[coord.2 - 1][coord.1][coord.0] != Block::Air {
+	if coord.2 != 0 && data[coord.2 - 1][coord.1][coord.0] != Block::Air {
 		return;
 	}
 	vertices.push(create_vertex(p[0], colour));
@@ -243,22 +243,23 @@ fn build_right(
 	colour: Color,
 	vertex_counter: &mut u16,
 ) {
-	if coord.2 == 15 || data[coord.2 + 1][coord.1][coord.0] == Block::Air {
-		vertices.push(create_vertex(p[4], colour));
-		vertices.push(create_vertex(p[5], colour));
-		vertices.push(create_vertex(p[6], colour));
-		vertices.push(create_vertex(p[7], colour));
-
-		indices.extend_from_slice(&[
-			*vertex_counter,
-			*vertex_counter + 1,
-			*vertex_counter + 2,
-			*vertex_counter,
-			*vertex_counter + 2,
-			*vertex_counter + 3,
-		]);
-		*vertex_counter += 4;
+	if coord.2 != 15 && data[coord.2 + 1][coord.1][coord.0] != Block::Air {
+		return;
 	}
+	vertices.push(create_vertex(p[4], colour));
+	vertices.push(create_vertex(p[5], colour));
+	vertices.push(create_vertex(p[6], colour));
+	vertices.push(create_vertex(p[7], colour));
+
+	indices.extend_from_slice(&[
+		*vertex_counter,
+		*vertex_counter + 1,
+		*vertex_counter + 2,
+		*vertex_counter,
+		*vertex_counter + 2,
+		*vertex_counter + 3,
+	]);
+	*vertex_counter += 4;
 }
 
 fn build_front(
@@ -270,7 +271,7 @@ fn build_front(
 	colour: Color,
 	vertex_counter: &mut u16,
 ) {
-	if coord.0 != 0 || data[coord.2][coord.1][coord.0 - 1] != Block::Air {
+	if coord.0 != 0 && data[coord.2][coord.1][coord.0 - 1] != Block::Air {
 		return;
 	}
 	vertices.push(create_vertex(p[0], colour));
@@ -298,7 +299,7 @@ fn build_back(
 	colour: Color,
 	vertex_counter: &mut u16,
 ) {
-	if coord.0 != 15 || data[coord.2][coord.1][coord.0 + 1] != Block::Air {
+	if coord.0 != 15 && data[coord.2][coord.1][coord.0 + 1] != Block::Air {
 		return;
 	}
 	vertices.push(create_vertex(p[1], colour));
