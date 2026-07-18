@@ -4,6 +4,8 @@
 
 This is just for education purposes, and I'm not making any plans on making money off this.
 
+Everything is original; code, texture, future sound (inc. music) is made by me, or people I know.
+
 ## Bugs
 
 Report any bugs in any **released** version, not commits though, commmits are like a record, but releases are like "I think it is ready"
