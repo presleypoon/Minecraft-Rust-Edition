@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 const DRAG: Vec3 = vec3(0.91, 0.98, 0.91);
 const GRAVITY: Vec3 = vec3(0.0, -0.08, 0.0);
 
-/// `pos` is position
+/// `pos` is position <br>
 /// `vel` is velocity
 pub struct Player {
 	pub pos: Vec3,
