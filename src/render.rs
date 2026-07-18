@@ -25,8 +25,8 @@ pub fn render(player: &Player, world: &World, look_angle: Vec2) {
 	for chunk in world.data.values() {
 		for mesh in &chunk.meshes {
 			draw_mesh(mesh);
-			gl_use_default_material();
-			unsafe { get_internal_gl().flush() };
+			// gl_use_default_material();
+			// unsafe { get_internal_gl().flush() };
 		}
 	}
 }
