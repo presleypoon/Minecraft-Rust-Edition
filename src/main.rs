@@ -46,7 +46,23 @@ async fn main() {
 	let mut world: World = World::new();
 	let mut look_angle: Vec2 = Vec2::ZERO;
 
-	world.new_chunk(0, 0, 0);
+	for z in -8..8 {
+		for y in 0..4 {
+			for x in -8..8 {
+				world.new_chunk(
+					x,
+					y,
+					z,
+					if y == 3 {
+						ChunkType::OnGround
+					} else {
+						ChunkType::BelowGround
+					},
+				);
+			}
+		}
+	}
+
 	set_cursor_grab(true);
 	show_mouse(false);
 
