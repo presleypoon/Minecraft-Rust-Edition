@@ -14,7 +14,7 @@ pub enum ChunkType {
 }
 
 pub struct Chunk {
-	pub data: [[[Block; 16]; 16]; 16],
+	pub data: Box<[[[Block; 16]; 16]; 16]>,
 }
 
 pub struct World {
@@ -43,6 +43,6 @@ impl World {
 			ChunkType::BelowGround => data = [[[Block::Cobblestone; 16]; 16]; 16],
 		}
 
-		self.data.insert((x, y, z), Chunk { data });
+		self.data.insert((x, y, z), Chunk { data: Box::new(data) });
 	}
 }
